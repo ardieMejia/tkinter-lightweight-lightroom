@@ -1,5 +1,6 @@
 import json
 import tkinter
+from tkinter import ttk
 from tkinter import messagebox
 from wand.image import Image as wandImage
 # import wand
@@ -7,18 +8,13 @@ from PIL import ImageTk
 from PIL import Image as PILimage
 # import PIL
 import shutil
+import os
 
 # NOTE-TO-SELF
 # one reason why the "update image" is so confusing, is becoz. once we change change/edit an image,
 # the "handle" of that image is no longer valid, and on top of that, updating inside function means making sure PhotoImage is in the scope always. And using wand instead of PIL works for us. Not sure if its, a problem with our knowledge
 
-lastUsed_data = {
-    "name": "John Doe",
-    "age": 30,
-    "city": "New York",
-    "isStudent": False,
-    "courses": ["Math", "Science", "History"]
-}
+
 lastUsed_data = []
 
 
@@ -29,8 +25,8 @@ shutil.copyfile(
     r'./temp/current.jpg'
 )
 
-mainLabelWindowX = 300
-mainLabelWindowY = 300
+mainLabelWindowX = 500
+mainLabelWindowY = 500
 activeEffectDisplay = "cs"
 
 window = tkinter.Tk()
@@ -92,11 +88,26 @@ def neutralizeEffectDisplayed():
 #         messagebox.showwarning(message=f"Error: {e}")
 
 
+def on_picList_select(event):
+    global VpicChosen
+    try:
+        shutil.copyfile(
+            os.path.join('input/', VpicChosen.get()),
+            r'./temp/current.jpg'
+        )
+        filename = "./config/last-used.json"
+        with open(filename, 'w') as file:
+            json.dump([], file, indent=4) # indent=4 for pretty-printing with 4 spaces
+        VupdateImageLabel()
+    except Exception as e:
+        messagebox.showwarning(message=f"Error: {e}")
+
+
 
 def VappendJson():
     global lastUsed_data
 
-    filename = "./input/last-used.json"
+    filename = "./config/last-used.json"
     try:
         with open(filename, 'w') as file:
             json.dump(lastUsed_data, file, indent=4) # indent=4 for pretty-printing with 4 spaces
@@ -107,7 +118,7 @@ def VappendJson():
 
         
 def Vcontrast_stretch__Button(Vfilename):
-    global VlabelImage, VimageForView, VmainImage, lastUsed_data
+    global VlabelImage, VmainImage, lastUsed_data
     try:
         Vimage = wandImage(filename=r"./temp/current.jpg")
         l_cs = Vscale_val.get() # l_cs is local contrast stretch
@@ -140,7 +151,7 @@ def Vcontrast_stretch__Button(Vfilename):
 def VsaveJson():
     global lastUsed_data
 
-    filename = "./input/last-used.json"
+    filename = "./config/last-used.json"
     try:
         with open(filename, 'w') as file:
             json.dump(lastUsed_data, file, indent=4) # indent=4 for pretty-printing with 4 spaces
@@ -170,6 +181,7 @@ def VupdateImageLabel():
 
     try:
         Vimage = PILimage.open(r"./temp/current.jpg")
+        Vimage.thumbnail((500,500))
         VmainImage = ImageTk.PhotoImage(Vimage)
         VlabelImage.config(image=VmainImage)
 
@@ -192,19 +204,34 @@ def setSizePosition(window):
         
 
 
-Vimage = wandImage(filename=r"./temp/current.jpg")
-blob = Vimage.make_blob(format="jpg")
-VmainImage = ImageTk.PhotoImage(data=blob)
 
-VimageForView = PILimage.open(r"./temp/current.jpg")
+frame_mc = tkinter.Frame(window) # frame main control
+frame_mc.grid(row=0,column=0,padx=10,pady=10)
+# endframemaincontrol
+
+VShow_cs_button = tkinter.Button(frame_mc, text='Show effect', command=lambda:VShow_cs())
+VShow_cs_button.pack()
+
+VpicChosen = tkinter.StringVar()
+VpicList = ttk.Combobox(frame_mc, width = 27, textvariable = VpicChosen)
+
+# Adding combobox drop down list
+VpicList['values'] = os.listdir("./input")
+VpicList.bind("<<ComboboxSelected>>", on_picList_select)
+VpicList.pack()
 
 
-VShow_cs_button = tkinter.Button(window, text='Show effect', command=lambda:VShow_cs()).grid(row=0, column=0,padx=10,pady=10)
+
+
+Vimage = PILimage.open(r"./temp/current.jpg")
+Vimage.thumbnail((500,500))
+VmainImage = ImageTk.PhotoImage(Vimage)
 VlabelImage = tkinter.Label(window, image=VmainImage, width=mainLabelWindowX, height=mainLabelWindowY)
 VlabelImage.grid(row=0,column=1,padx=10,pady=10)
+#endmainimagelabel
+
 Vlabel2 = tkinter.Label(window, text="Some image details").grid(row=0, column=2)
 
-print(Vlabel2)
 
 # w = Scale(master, from_=0, to=200, orient=HORIZONTAL)
 # w.pack()
