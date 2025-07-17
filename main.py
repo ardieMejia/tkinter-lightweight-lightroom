@@ -46,6 +46,28 @@ def folder_required(func):
     return wrapper
 
 
+def batch_required(func):
+    """
+    A simple decorator that prints messages before and after
+    the decorated function is called.
+    """
+    def wrapper(*args, **kwargs):
+        if not Path("./batch").is_dir():
+            VbatchButton.config(state=tkinter.DISABLED)
+            VbatchButton.config(text="no batch folder found")
+            return []
+        elif not len(os.listdir("./batch")):
+            VbatchButton.config(state=tkinter.DISABLED)
+            VbatchButton.config(text="no files in batch")
+            return []
+        return func(*args, **kwargs)
+        print("asd")
+    return wrapper
+
+            
+
+
+
 # Vfilename="derevia-tree.jpg"
 
 
@@ -68,6 +90,14 @@ Vscale_sat_val = tkinter.IntVar()
 Vscale_sat_val.set(0)
 Vscale_warmth_val = tkinter.IntVar()
 Vscale_warmth_val.set(0)
+Vscale_sptintR_val = tkinter.IntVar()
+Vscale_sptintR_val.set(0)
+Vscale_sptintG_val = tkinter.IntVar()
+Vscale_sptintG_val.set(0)
+Vscale_sptintB_val = tkinter.IntVar()
+Vscale_sptintB_val.set(0)
+Vscale_spgray_val = tkinter.IntVar()
+Vscale_spgray_val.set(0)
 
 
 
@@ -87,6 +117,11 @@ def initMainImageLabel():
 def getListPics():
     return os.listdir("./input")
     
+@batch_required
+def getBatchPics():
+    return os.listdir("./batch")
+
+
 # def reduceLeft(self, left=0):
 #     self.crop(
 #         left=left
@@ -95,6 +130,10 @@ def getListPics():
     
 def Vc_toRatio(l_cs, sum):
     return l_cs/sum
+
+
+def Vinvert_ratio(l_r):
+    return 1 - l_r
 
     
 def wandImage_getWidth(p_img):
@@ -122,6 +161,8 @@ def neutralizeEffectDisplayed():
     frameEffect_mod.grid_forget()
     frameEffect_sat.grid_forget()
     frameEffect_warmth.grid_forget()
+    frameEffect_sptint.grid_forget()
+    frameEffect_spgray.grid_forget()
     activeEffectDisplay = ""
 
         
@@ -344,6 +385,180 @@ def Vwarmth_event():
         print(e)
 
         
+def Vsptint_event():
+    global VlabelImage, VmainImage, lastUsed_data
+    try:
+        Vimage = wandImage(filename=r"./temp/current.jpg")
+        l_sptintR = Vscale_sptintR_val.get()
+        l_sptintG = Vscale_sptintG_val.get()
+        l_sptintB = Vscale_sptintB_val.get()
+        #endgetsptint
+
+
+        matrix = [[1, 0, 0],
+                  [0, 1, 0],
+                  [0, 0, 1]]
+
+        if l_sptintG == 0 and l_sptintB == 0:
+            l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
+            l_v = Vinvert_ratio(l_sptintR_pct)
+            matrix = [[1, 0, 0],
+                      [0, l_v, 0],
+                      [0, 0, l_v]]
+        elif l_sptintR == 0 and l_sptintB == 0:
+            l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
+            l_v = Vinvert_ratio(l_sptintG_pct)
+            matrix = [[l_v, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, l_v]]            
+        elif l_sptintR == 0 and l_sptintG == 0:
+            l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
+            l_v = Vinvert_ratio(l_sptintB_pct)
+            matrix = [[1, 0, 0],
+                      [0, l_v, 0],
+                      [0, 0, l_v]]
+        elif l_sptintR == 0:
+            l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
+            l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
+            # no inverting, coz dont know how to explain
+            matrix = [[1, 0, 0],
+                      [0, 1, l_sptintG_pct],
+                      [0, l_sptintB_pct, 1]]            
+        elif l_sptintG == 0:
+            l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
+            l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
+            # no inverting, coz dont know how to explain
+            matrix = [[1, 0, l_sptintR_pct],
+                      [0, 1, 0],
+                      [l_sptintB_pct, 0, 1]]
+        elif l_sptintB == 0:
+            l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
+            l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
+            # no inverting, coz dont know how to explain
+            matrix = [[1, l_sptintR_pct, 0],
+                      [l_sptintG_pct, 1, 0],
+                      [0, 0, 1]]
+            
+            
+            
+            
+        Vimage.color_matrix(matrix)
+        Vimage.save(filename=r"./temp/current.jpg")
+        # ===== endsptint
+
+
+        Vimage = PILimage.open(r"./temp/current.jpg")
+        Vimage.thumbnail((500,500))
+        VmainImage = ImageTk.PhotoImage(Vimage)
+        # ===== endgloballyupdatevar
+
+        lastUsed_data.append({"effect": "sptint", "value1": matrix})
+        VappendJson()
+        # endappendjson        
+
+        VlabelImage.config(image=VmainImage)
+        # ===== endupdateimagelabel
+
+    except Exception as e:
+        messagebox.showwarning(message=f"Error: {e}")
+        print(e)
+
+
+def Vspgray_event():
+    global VlabelImage, VmainImage, lastUsed_data
+    try:
+        Vimage = wandImage(filename=r"./temp/current.jpg")
+        l_gray = Vscale_spgray_val.get() # l_mod1 is local br
+        #endgrayval
+
+
+        l_gray = Vc_toRatio(l_gray, 100)
+        # l_gray = Vinvert_ratio(l_gray)
+
+        matrix = [[l_gray, l_gray, l_gray],
+                  [l_gray, l_gray, l_gray],
+                  [l_gray, l_gray, l_gray]]
+        
+        # Vimage.colorize(color=l_color, alpha=f"rgb(5%, 5%, {l_val}%)")
+        Vimage.color_matrix(matrix)
+        Vimage.save(filename=r"./temp/current.jpg")
+        print(l_gray)
+
+        # ===== endsaturation
+        
+        Vimage = PILimage.open(r"./temp/current.jpg")
+        Vimage.thumbnail((500,500))
+        VmainImage = ImageTk.PhotoImage(Vimage)
+        # ===== endgloballyupdatevar
+
+        lastUsed_data.append({"effect": "grayscale", "value1": matrix})
+        VappendJson()
+        # endappendjson        
+
+        VlabelImage.config(image=VmainImage)
+        # ===== endupdateimagelabel
+
+    except Exception as e:
+        messagebox.showwarning(message=f"Error: {e}")
+        print(e)
+
+
+def Vbatch_event():
+    # global VlabelImage, VmainImage, lastUsed_data
+
+    os.makedirs("./batch_output", exist_ok=True)
+
+
+    with open("./config/last-used.json") as f:
+        stackedEffect = json.load(f)        
+
+    if not VbatchList.curselection():
+        for raw_img in os.listdir("./batch"):
+            shutil.copyfile(    
+                f'./batch/{raw_img}',
+                f'./batch_output/{raw_img}'
+            )
+            for effect in stackedEffect:
+                if effect["effect"] == "brightness":
+                    print("processing brighntess on"+ str(raw_img))
+                    value1 = effect["value1"]
+                    Vimage = wandImage(filename=f"./batch_output/{raw_img}")
+                    Vimage.brightness_contrast(brightness=value1, contrast=0)
+                    Vimage.save(filename=f"./batch_output/{raw_img}")
+                elif effect["effect"] == "highlights":
+                    print("processing highlghts on"+ str(raw_img))
+                    value1 = effect["value1"]
+                    value2 = effect["value2"]
+                    Vimage = wandImage(filename=f"./batch_output/{raw_img}")
+                    # Vimage.brightness_contrast(brightness=value1, contrast=0)
+                    vimage.contrast_stretch(value1, value2)
+                    Vimage.save(filename=f"./batch_output/{raw_img}")
+
+    for sel_i in VbatchList.curselection():
+        print(VbatchList.get(sel_i))
+        
+
+    # for effect in stackedEffect:
+    #     if effect["effect"] = "brightness":
+    #         Vimage.brightness_contrast(brightness=l_br, contrast=0)
+
+    #             Vimage = wandImage(filename=r"./temp/current.jpg")
+    #     l_br = Vscale_br_val.get() # l_br is local brightness
+    #     Vimage.save(filename=r"./temp/current.jpg")
+    #     print(l_br)
+        # ===== endleftcrop
+
+
+
+
+        # endappendjson        
+
+
+        # ===== endupdateimagelabel
+
+
+
+        
         
 def Vhighlight__Button():
     global VlabelImage, VmainImage, lastUsed_data
@@ -412,6 +627,10 @@ def VShow_effect(l_effectChosen):
         frameEffect_sat.grid(row=1,column=1)
     elif activeEffectDisplay == "warmth":
         frameEffect_warmth.grid(row=1,column=1)
+    elif activeEffectDisplay == "special tint":
+        frameEffect_sptint.grid(row=1,column=1)
+    elif activeEffectDisplay == "grayscale":
+        frameEffect_spgray.grid(row=1,column=1)
 
         
 #delete
@@ -423,6 +642,15 @@ def VupdateImageLabel():
         Vimage.thumbnail((500,500))
         VmainImage = ImageTk.PhotoImage(Vimage)
         VlabelImage.config(image=VmainImage)
+
+        
+        Vimage = wandImage(filename=r"./temp/current.jpg")
+        textInfo = f"Image size: {Vimage.size}\n \
+        Image depth: {Vimage.depth}\n \
+        Image colorspace: {Vimage.colorspace}\n \
+        Has alpha channel: {Vimage.alpha_channel}"
+        VlabelInfo.config(text=textInfo)
+        
 
     except Exception as e:
         messagebox.showwarning(message=f"Error: {e}")
@@ -454,7 +682,7 @@ frame_mc.grid(row=0,column=0,padx=10,pady=10)
 
 VeffectChosen = tkinter.StringVar()
 VeffectList =ttk.Combobox(frame_mc, width = 27, textvariable = VeffectChosen)
-VeffectList['values'] = ["brightness", "highlights", "contrast", "exposure", "saturation", "warmth"]
+VeffectList['values'] = ["brightness", "highlights", "contrast", "exposure", "saturation", "warmth", "special tint", "grayscale"]
 VeffectList.bind("<<ComboboxSelected>>", on_effectList_select)
 VeffectList.pack()
 
@@ -471,7 +699,9 @@ VlabelImage = tkinter.Label(window, image=VmainImage, width=mainLabelWindowX, he
 VlabelImage.grid(row=0,column=1,padx=10,pady=10)
 #endmainimagelabel
 
-Vlabel2 = tkinter.Label(window, text="Some image details").grid(row=0, column=2)
+
+VlabelInfo = tkinter.Label(window, text="Some image details")
+VlabelInfo.grid(row=0, column=2)
 
 
 # w = Scale(master, from_=0, to=200, orient=HORIZONTAL)
@@ -479,7 +709,20 @@ Vlabel2 = tkinter.Label(window, text="Some image details").grid(row=0, column=2)
 
 
 
-# VButton_leftSide = tkinter.Button(window, text='Crop', command=lambda:leftSide(Vfilename)).grid(row=1, column=0)
+# we are not using VbatchChosen, and no function binded to event
+frame_batch = tkinter.Frame(window) # 
+frame_batch.grid(row=1,column=0,padx=10,pady=10, rowspan=10)
+VbatchChosen = tkinter.StringVar()
+VbatchList = tkinter.Listbox(frame_batch, height=10, selectmode=tkinter.MULTIPLE, yscrollcommand=True)
+VbatchList.pack()
+VbatchButton = tkinter.Button(frame_batch, text='Batch effect', command=lambda:Vbatch_event())
+VbatchButton.pack(padx=10,pady=10)
+#endarrangelistboxandbutton
+
+VbatchValues = getBatchPics()
+VbatchList.insert(tkinter.END, *VbatchValues)
+# VbatchList.bind("<<ComboboxSelected>>")
+#endeventlistboxandbutton
 
 
 frameEffect_high = tkinter.Frame(window) 
@@ -561,6 +804,41 @@ tkinter.Button(frameEffect_warmth, text='Exposure', command=lambda:Vwarmth_event
 frameEffect_warmth.grid_forget()
 # frameEffect_warmth is frame contrast
 #endwarmth
+
+frameEffect_sptint = tkinter.Frame(window) # frameEffect_sptint is frame warmth
+frameEffect_sptint.grid(row=1,column=1,rowspan=10)
+Vlabel_sptint = tkinter.Label(frameEffect_sptint, text=f"warmth (below 50 is colder)")
+Vlabel_sptint.pack(padx=10,pady=(10,0))
+Vscale_sptintR = tkinter.Scale(frameEffect_sptint, from_=0, to=100, orient='horizontal', variable=Vscale_sptintR_val)
+Vscale_sptintR.set(0)
+Vscale_sptintR.pack(padx=10,pady=(0,10))
+Vscale_sptintG = tkinter.Scale(frameEffect_sptint, from_=0, to=100, orient='horizontal', variable=Vscale_sptintG_val)
+Vscale_sptintG.set(0)
+Vscale_sptintG.pack(padx=10,pady=(0,10))
+Vscale_sptintB = tkinter.Scale(frameEffect_sptint, from_=0, to=100, orient='horizontal', variable=Vscale_sptintB_val)
+Vscale_sptintB.set(0)
+Vscale_sptintB.pack(padx=10,pady=(0,10))
+tkinter.Button(frameEffect_sptint, text='Exposure', command=lambda:Vsptint_event()).pack(padx=10,pady=10)
+frameEffect_sptint.grid_forget()
+# frameEffect_sptint is frame contrast
+#endsptint
+
+
+frameEffect_spgray = tkinter.Frame(window) # frameEffect_spgray is frame warmth
+frameEffect_spgray.grid(row=1,column=1,rowspan=10)
+Vlabel_spgray = tkinter.Label(frameEffect_sptint, text=f"warmth (below 50 is colder)")
+Vlabel_spgray.pack(padx=10,pady=(10,0))
+Vscale_spgray = tkinter.Scale(frameEffect_spgray, from_=0, to=100, orient='horizontal', variable=Vscale_spgray_val)
+Vscale_spgray.set(50)
+Vscale_spgray.pack(padx=10,pady=(0,10))
+tkinter.Button(frameEffect_spgray, text='GRayscale', command=lambda:Vspgray_event()).pack(padx=10,pady=10)
+frameEffect_spgray.grid_forget()
+# frameEffect_spgray is frame contrast
+#endsptint
+
+
+
+
 
 
 
