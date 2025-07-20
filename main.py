@@ -233,14 +233,199 @@ def VappendJson():
     except Exception as e:
         messagebox.showwarning(message=f"Error: {e}")
 
+def applyEffect(*value, **kwargs):
+    # global VlabelImage, VmainImage, lastUsed_data
+    if kwargs["effectName"] == "brightness":
+        try:
+            if len(value) != 1:
+                messagebox.showwarning(message=f"Internal Error: tuple size not matching")
+                return 
+            Vimage = wandImage(filename=kwargs["inName"])
+            print(Vimage)
+            l_br = value[0]
+            Vimage.brightness_contrast(brightness=l_br, contrast=0)
+            Vimage.save(filename=kwargs["outName"])
+        except:
+            print(f"something went wrong")
+    if kwargs["effectName"] == "highlights":
+        print(type(value))
+        print(value)
+        try:
+            if len(value) != 2:
+                messagebox.showwarning(message=f"Internal Error: tuple size not matching")
+                return 
+            Vimage = wandImage(filename=kwargs["inName"])
+            print(Vimage)
+            ratio1 = value[0] 
+            ratio2 = value[1]
+            print(ratio1)
+            print(ratio2)
+            print(kwargs["outName"])
+            # Vimage.brightness_contrast(brightness=l_br, contrast=0)
+            # Vimage.brightness_contrast(brightness=0, contrast=l_ctr)
+            Vimage.contrast_stretch(ratio1, ratio2)
+            # Vimage.brightness_contrast(brightness=10, contrast=0)
+            Vimage.save(filename=kwargs["outName"])
+        except:
+            print(f"something went wrong")
+    if kwargs["effectName"] == "contrast":
+        try:
+            if len(value) != 1:
+                messagebox.showwarning(message=f"Internal Error: tuple size not matching")
+                return 
+            Vimage = wandImage(filename=kwargs["inName"])
+            print(Vimage)
+            l_ctr= value[0]
+            # Vimage.brightness_contrast(brightness=l_br, contrast=0)
+            Vimage.brightness_contrast(brightness=0, contrast=l_ctr)
+            Vimage.save(filename=kwargs["outName"])
+        except:
+            print(f"something went wrong")
+    if kwargs["effectName"] == "exposure":
+        try:
+            if len(value) != 1:
+                messagebox.showwarning(message=f"Internal Error: tuple size not matching")
+                return 
+            Vimage = wandImage(filename=kwargs["inName"])
+            print(Vimage)
+            l_mod= value[0]
+            # Vimage.brightness_contrast(brightness=l_br, contrast=0)
+            # Vimage.brightness_contrast(brightness=0, contrast=l_ctr)
+            Vimage.modulate(brightness=l_mod)
+            Vimage.save(filename=kwargs["outName"])
+        except:
+            print(f"something went wrong")
+    if kwargs["effectName"] == "saturation":
+        try:
+            if len(value) != 1:
+                messagebox.showwarning(message=f"Internal Error: tuple size not matching")
+                return 
+            Vimage = wandImage(filename=kwargs["inName"])
+            print(Vimage)
+            l_sat= value[0]
+            # Vimage.modulate(brightness=l_mod)
+            Vimage.modulate(saturation=l_sat)
+            Vimage.save(filename=kwargs["outName"])
+        except:
+            print(f"something went wrong")
+    if kwargs["effectName"] == "warmth":
+        try:
+            if len(value) != 1:
+                messagebox.showwarning(message=f"Internal Error: tuple size not matching")
+                return 
+            Vimage = wandImage(filename=kwargs["inName"])
+            print(Vimage)
+            l_warmth= value[0]
+            if l_warmth > 50:
+                l_color = "orange"
+                l_val = (l_warmth - 50) * 2
+            else:
+                l_color = "blue"
+                l_val = (50 - l_warmth) * 2
+                #endgetcolor
+            if l_color == "orange":
+                Vimage.colorize(color=l_color, alpha=f"rgb(5%, 5%, {l_val}%)")
+            else:
+                Vimage.colorize(color=l_color, alpha=f"rgb({l_val}%, 5%, 5%)")
+            
+            # ==========
+            Vimage.save(filename=kwargs["outName"])
+        except:
+            print(f"something went wrong")
+    if kwargs["effectName"] == "special tint":
+        try:
+            if len(value) != 3:
+                messagebox.showwarning(message=f"Internal Error: tuple size not matching")
+                return 
+            Vimage = wandImage(filename=kwargs["inName"])
+            print(Vimage)
+            l_sptintR = value[0]
+            l_sptintG = value[1]
+            l_sptintB = value[2]
+
+            print(l_sptintR)
+            print(l_sptintG)
+            print(l_sptintB)
+            print(type(l_sptintB))
+
+            matrix = [[1, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, 1]]
+
+            if l_sptintG == 0 and l_sptintB == 0:
+                l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
+                l_v = Vinvert_ratio(l_sptintR_pct)
+                matrix = [[1, 0, 0],
+                          [0, l_v, 0],
+                          [0, 0, l_v]]
+            elif l_sptintR == 0 and l_sptintB == 0:
+                l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
+                l_v = Vinvert_ratio(l_sptintG_pct)
+                matrix = [[l_v, 0, 0],
+                          [0, 1, 0],
+                          [0, 0, l_v]]
+            elif l_sptintR == 0 and l_sptintG == 0:
+                l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
+                l_v = Vinvert_ratio(l_sptintB_pct)
+                matrix = [[1, 0, 0],
+                          [0, l_v, 0],
+                          [0, 0, l_v]]
+            elif l_sptintR == 0:
+                l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
+                l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
+                # no inverting, coz dont know how to explain
+                matrix = [[1, 0, 0],
+                          [0, 1, l_sptintG_pct],
+                          [0, l_sptintB_pct, 1]]
+            elif l_sptintG == 0:
+                l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
+                l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
+                # no inverting, coz dont know how to explain
+                matrix = [[1, 0, l_sptintR_pct],
+                          [0, 1, 0],
+                          [l_sptintB_pct, 0, 1]]
+            elif l_sptintB == 0:
+                l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
+                l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
+                # no inverting, coz dont know how to explain
+                matrix = [[1, l_sptintR_pct, 0],
+                          [l_sptintG_pct, 1, 0],
+                          [0, 0, 1]]
+            # ===== endsptint
+            Vimage.color_matrix(matrix)
+            Vimage.save(filename=kwargs["outName"])
+        except:
+            print(f"something went wrong")
+            
+    if kwargs["effectName"] == "grayscale":
+        try:
+            if len(value) != 1:
+                messagebox.showwarning(message=f"Internal Error: tuple size not matching")
+                return 
+            Vimage = wandImage(filename=kwargs["inName"])
+            print(Vimage)
+            l_gray= value[0]
+            l_gray = Vc_toRatio(l_gray, 100)
+
+            matrix = [[l_gray, l_gray, l_gray],
+                      [l_gray, l_gray, l_gray],
+                      [l_gray, l_gray, l_gray]]
+        
+            Vimage.color_matrix(matrix)
+            
+            # ==========
+            Vimage.save(filename=kwargs["outName"])
+        except:
+            print(f"something went wrong")
+            
+
 
 def Vbrightness_event():
     global VlabelImage, VmainImage, lastUsed_data
     try:
-        Vimage = wandImage(filename=r"./temp/current.jpg")
         l_br = Vscale_br_val.get() # l_br is local brightness
-        Vimage.brightness_contrast(brightness=l_br, contrast=0)
-        Vimage.save(filename=r"./temp/current.jpg")
+        # tuple is undreadable concept
+        applyEffect(*(l_br,), effectName="brightness", inName=r"./temp/current.jpg", outName=r"./temp/current.jpg")
         print(l_br)
         # ===== endleftcrop
         
@@ -259,14 +444,47 @@ def Vbrightness_event():
     except Exception as e:
         messagebox.showwarning(message=f"Error: {e}")
         print(e)
+
+
+        
+def Vhighlight__Button():
+    global VlabelImage, VmainImage, lastUsed_data
+    try:
+        l_cs1 = Vscale_high1_val.get() # l_cs1 is local contrast stretch
+        print(l_cs1)
+        ratio1=Vc_toRatio(l_cs1, 100)
+        l_cs2 = Vscale_high2_val.get() # l_cs2 is local contrast stretch
+        print(l_cs2)
+        ratio2=Vc_toRatio((100-l_cs2), 100)
+        applyEffect(*(ratio1,ratio2), effectName="highlights", inName=r"./temp/current.jpg", outName=r"./temp/current.jpg")
+        # TEST: Vimage.contrast_stretch(20,20)
+        # ===== endleftcrop
+        
+        Vimage = PILimage.open(r"./temp/current.jpg")
+        Vimage.thumbnail((500,500))
+        # blob = Vimage.make_blob(format="jpg")
+        # if Photoimage below is imported globally, it will not work, PhotoImage object needs to redefined inside scope, otherwise it doesnt track image changes, weird.
+        VmainImage = ImageTk.PhotoImage(Vimage)
+        # ===== endgloballyupdatevar
+
+
+        lastUsed_data.append({"effect": "highlights", "value1": ratio1, "value2": ratio2})
+        VappendJson()
+        # endappendjson
+
+
+        VlabelImage.config(image=VmainImage)
+        # ===== endupdateimagelabel
+
+    except Exception as e:
+        messagebox.showwarning(message=f"Error: {e}")
+        print(e)
         
 def Vcontrast_event():
     global VlabelImage, VmainImage, lastUsed_data
     try:
-        Vimage = wandImage(filename=r"./temp/current.jpg")
         l_ctr = Vscale_ctr_val.get() # l_ctr is local contrast
-        Vimage.brightness_contrast(brightness=0, contrast=l_ctr)
-        Vimage.save(filename=r"./temp/current.jpg")
+        applyEffect(*(l_ctr,), effectName="contrast", inName=r"./temp/current.jpg", outName=r"./temp/current.jpg")
         print(l_ctr)
         # ===== endleftcrop
         
@@ -290,10 +508,10 @@ def Vcontrast_event():
 def Vmodulate_event():
     global VlabelImage, VmainImage, lastUsed_data
     try:
-        Vimage = wandImage(filename=r"./temp/current.jpg")
+        # Vimage = wandImage(filename=r"./temp/current.jpg")
         l_mod1 = Vscale_mod1_val.get() # l_mod1 is local br
-        Vimage.modulate(brightness=l_mod1)
-        Vimage.save(filename=r"./temp/current.jpg")
+        applyEffect(*(l_mod1,), effectName="exposure", inName=r"./temp/current.jpg", outName=r"./temp/current.jpg")
+        # Vimage.save(filename=r"./temp/current.jpg")
         print(l_mod1)
 
         # ===== endmodulate
@@ -318,10 +536,11 @@ def Vmodulate_event():
 def Vsaturation_event():
     global VlabelImage, VmainImage, lastUsed_data
     try:
-        Vimage = wandImage(filename=r"./temp/current.jpg")
+        # Vimage = wandImage(filename=r"./temp/current.jpg")
         l_sat = Vscale_sat_val.get() # l_mod1 is local br
-        Vimage.modulate(saturation=l_sat)
-        Vimage.save(filename=r"./temp/current.jpg")
+        applyEffect(*(l_sat,), effectName="saturation", inName=r"./temp/current.jpg", outName=r"./temp/current.jpg")
+        # Vimage.modulate(saturation=l_sat)
+        # Vimage.save(filename=r"./temp/current.jpg")
         print(l_sat)
 
         # ===== endsaturation
@@ -347,23 +566,11 @@ def Vsaturation_event():
 def Vwarmth_event():
     global VlabelImage, VmainImage, lastUsed_data
     try:
-        Vimage = wandImage(filename=r"./temp/current.jpg")
+
         l_warmth = Vscale_warmth_val.get() # l_mod1 is local br
 
-        if l_warmth > 50:
-            l_color = "orange"
-            l_val = (l_warmth - 50) * 2
-        else:
-            l_color = "blue"
-            l_val = (50 - l_warmth) * 2
-        #endgetcolor        
+        applyEffect(*(l_warmth,), effectName="warmth", inName=r"./temp/current.jpg", outName=r"./temp/current.jpg")
 
-
-        if l_color == "orange":
-            Vimage.colorize(color=l_color, alpha=f"rgb(5%, 5%, {l_val}%)")
-        else:
-            Vimage.colorize(color=l_color, alpha=f"rgb({l_val}%, 5%, 5%)")
-        Vimage.save(filename=r"./temp/current.jpg")
         print(l_warmth)
 
         # ===== endsaturation
@@ -388,63 +595,13 @@ def Vwarmth_event():
 def Vsptint_event():
     global VlabelImage, VmainImage, lastUsed_data
     try:
-        Vimage = wandImage(filename=r"./temp/current.jpg")
+
         l_sptintR = Vscale_sptintR_val.get()
         l_sptintG = Vscale_sptintG_val.get()
-        l_sptintB = Vscale_sptintB_val.get()
+        l_sptintB = Vscale_sptintB_val.get()        
         #endgetsptint
-
-
-        matrix = [[1, 0, 0],
-                  [0, 1, 0],
-                  [0, 0, 1]]
-
-        if l_sptintG == 0 and l_sptintB == 0:
-            l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
-            l_v = Vinvert_ratio(l_sptintR_pct)
-            matrix = [[1, 0, 0],
-                      [0, l_v, 0],
-                      [0, 0, l_v]]
-        elif l_sptintR == 0 and l_sptintB == 0:
-            l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
-            l_v = Vinvert_ratio(l_sptintG_pct)
-            matrix = [[l_v, 0, 0],
-                      [0, 1, 0],
-                      [0, 0, l_v]]            
-        elif l_sptintR == 0 and l_sptintG == 0:
-            l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
-            l_v = Vinvert_ratio(l_sptintB_pct)
-            matrix = [[1, 0, 0],
-                      [0, l_v, 0],
-                      [0, 0, l_v]]
-        elif l_sptintR == 0:
-            l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
-            l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
-            # no inverting, coz dont know how to explain
-            matrix = [[1, 0, 0],
-                      [0, 1, l_sptintG_pct],
-                      [0, l_sptintB_pct, 1]]            
-        elif l_sptintG == 0:
-            l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
-            l_sptintB_pct = Vc_toRatio(l_sptintB, 100)
-            # no inverting, coz dont know how to explain
-            matrix = [[1, 0, l_sptintR_pct],
-                      [0, 1, 0],
-                      [l_sptintB_pct, 0, 1]]
-        elif l_sptintB == 0:
-            l_sptintR_pct = Vc_toRatio(l_sptintR, 100)
-            l_sptintG_pct = Vc_toRatio(l_sptintG, 100)
-            # no inverting, coz dont know how to explain
-            matrix = [[1, l_sptintR_pct, 0],
-                      [l_sptintG_pct, 1, 0],
-                      [0, 0, 1]]
-            
-            
-            
-            
-        Vimage.color_matrix(matrix)
-        Vimage.save(filename=r"./temp/current.jpg")
-        # ===== endsptint
+        
+        applyEffect(*(l_sptintR, l_sptintG, l_sptintB), effectName="special tint", inName=r"./temp/current.jpg", outName=r"./temp/current.jpg")
 
 
         Vimage = PILimage.open(r"./temp/current.jpg")
@@ -452,9 +609,9 @@ def Vsptint_event():
         VmainImage = ImageTk.PhotoImage(Vimage)
         # ===== endgloballyupdatevar
 
-        lastUsed_data.append({"effect": "sptint", "value1": matrix})
+        lastUsed_data.append({"effect": "special tint", "valueR": l_sptintR, "valueG": l_sptintG, "valueB": l_sptintB})
         VappendJson()
-        # endappendjson        
+        # endappendjson
 
         VlabelImage.config(image=VmainImage)
         # ===== endupdateimagelabel
@@ -467,21 +624,11 @@ def Vsptint_event():
 def Vspgray_event():
     global VlabelImage, VmainImage, lastUsed_data
     try:
-        Vimage = wandImage(filename=r"./temp/current.jpg")
         l_gray = Vscale_spgray_val.get() # l_mod1 is local br
         #endgrayval
 
+        applyEffect(*(l_gray, ), effectName="grayscale", inName=r"./temp/current.jpg", outName=r"./temp/current.jpg")
 
-        l_gray = Vc_toRatio(l_gray, 100)
-        # l_gray = Vinvert_ratio(l_gray)
-
-        matrix = [[l_gray, l_gray, l_gray],
-                  [l_gray, l_gray, l_gray],
-                  [l_gray, l_gray, l_gray]]
-        
-        # Vimage.colorize(color=l_color, alpha=f"rgb(5%, 5%, {l_val}%)")
-        Vimage.color_matrix(matrix)
-        Vimage.save(filename=r"./temp/current.jpg")
         print(l_gray)
 
         # ===== endsaturation
@@ -491,7 +638,7 @@ def Vspgray_event():
         VmainImage = ImageTk.PhotoImage(Vimage)
         # ===== endgloballyupdatevar
 
-        lastUsed_data.append({"effect": "grayscale", "value1": matrix})
+        lastUsed_data.append({"effect": "grayscale", "value1": l_gray})
         VappendJson()
         # endappendjson        
 
@@ -508,6 +655,7 @@ def Vbatch_event():
 
     os.makedirs("./batch_output", exist_ok=True)
 
+    print("hello there")
 
     with open("./config/last-used.json") as f:
         stackedEffect = json.load(f)        
@@ -522,17 +670,62 @@ def Vbatch_event():
                 if effect["effect"] == "brightness":
                     print("processing brighntess on"+ str(raw_img))
                     value1 = effect["value1"]
-                    Vimage = wandImage(filename=f"./batch_output/{raw_img}")
-                    Vimage.brightness_contrast(brightness=value1, contrast=0)
-                    Vimage.save(filename=f"./batch_output/{raw_img}")
+                    # Vimage = wandImage(filename=f"./batch_output/{raw_img}")
+                    applyEffect(*(value1,), effectName="brightness",  inName=f"./batch/{raw_img}", outName=f"./batch_output/{raw_img}")
+                    # Vimage.brightness_contrast(brightness=value1, contrast=0)
+                    # Vimage.save(filename=outName)
                 elif effect["effect"] == "highlights":
                     print("processing highlghts on"+ str(raw_img))
-                    value1 = effect["value1"]
-                    value2 = effect["value2"]
-                    Vimage = wandImage(filename=f"./batch_output/{raw_img}")
+                    ratio1 = effect["value1"]
+                    ratio2 = effect["value2"]
+                    
+                    # Vimage = wandImage(filename=f"./batch_output/{raw_img}")
                     # Vimage.brightness_contrast(brightness=value1, contrast=0)
-                    vimage.contrast_stretch(value1, value2)
-                    Vimage.save(filename=f"./batch_output/{raw_img}")
+                    applyEffect(*(ratio1,ratio2), effectName="highlights", inName=f"./batch/{raw_img}", outName=f"./batch_output/{raw_img}")
+                    # Vimage.save(filename=f"./batch_output/{raw_img}")
+                elif effect["effect"] == "contrast":
+                    print("processing contrast on"+ str(raw_img))
+                    value1 = effect["value1"]
+                    
+                    # Vimage = wandImage(filename=f"./batch_output/{raw_img}")
+                    # Vimage.brightness_contrast(brightness=value1, contrast=0)
+                    applyEffect(*(value1,), effectName="contrast", inName=f"./batch/{raw_img}", outName=f"./batch_output/{raw_img}")
+                    # Vimage.save(filename=f"./batch_output/{raw_img}")
+                elif effect["effect"] == "exposure":
+                    print("processing exposure on"+ str(raw_img))
+                    value1 = effect["value1"]
+                    
+                    # Vimage = wandImage(filename=f"./batch_output/{raw_img}")
+                    # Vimage.brightness_contrast(brightness=value1, contrast=0)
+                    applyEffect(*(value1,), effectName="exposure", inName=f"./batch/{raw_img}", outName=f"./batch_output/{raw_img}")
+                    # Vimage.save(filename=f"./batch_output/{raw_img}")
+                elif effect["effect"] == "saturation":
+                    print("processing saturation on"+ str(raw_img))
+                    value1 = effect["value1"]
+                    
+                    # Vimage = wandImage(filename=f"./batch_output/{raw_img}")
+                    # Vimage.brightness_contrast(brightness=value1, contrast=0)
+                    applyEffect(*(value1,), effectName="saturation", inName=f"./batch/{raw_img}", outName=f"./batch_output/{raw_img}")
+                    # Vimage.save(filename=f"./batch_output/{raw_img}")
+                elif effect["effect"] == "warmth":
+                    print("processing warmth on"+ str(raw_img))
+                    value1 = effect["value1"]                    
+                    # Vimage = wandImage(filename=f"./batch_output/{raw_img}")
+                    # Vimage.brightness_contrast(brightness=value1, contrast=0)
+                    applyEffect(*(value1,), effectName="warmth", inName=f"./batch/{raw_img}", outName=f"./batch_output/{raw_img}")
+                    # Vimage.save(filename=f"./batch_output/{raw_img}")
+                elif effect["effect"] == "special tint":
+                    print("processing special tint on"+ str(raw_img))
+                    valueR = effect["valueR"]                    
+                    valueG = effect["valueG"]                    
+                    valueB = effect["valueB"]                    
+                    applyEffect(*(valueR,valueG,valueB), effectName="special tint", inName=f"./batch/{raw_img}", outName=f"./batch_output/{raw_img}")
+                    # Vimage.save(filename=f"./batch_output/{raw_img}")
+                elif effect["effect"] == "grayscale":
+                    print("processing grayscale on"+ str(raw_img))
+                    value1 = effect["value1"]                    
+                    applyEffect(*(value1,), effectName="grayscale", inName=f"./batch/{raw_img}", outName=f"./batch_output/{raw_img}")
+                    # Vimage.save(filename=f"./batch_output/{raw_img}")
 
     for sel_i in VbatchList.curselection():
         print(VbatchList.get(sel_i))
@@ -560,40 +753,7 @@ def Vbatch_event():
 
         
         
-def Vhighlight__Button():
-    global VlabelImage, VmainImage, lastUsed_data
-    try:
-        Vimage = wandImage(filename=r"./temp/current.jpg")
-        l_cs1 = Vscale_high1_val.get() # l_cs1 is local contrast stretch
-        print(l_cs1)
-        ratio1=Vc_toRatio(l_cs1, 100)
-        l_cs2 = Vscale_high2_val.get() # l_cs2 is local contrast stretch
-        print(l_cs2)
-        ratio2=Vc_toRatio((100-l_cs2), 100)
-        Vimage.contrast_stretch(ratio1, ratio2)
-        # TEST: Vimage.contrast_stretch(20,20)
-        Vimage.save(filename=r"./temp/current.jpg")
-        # ===== endleftcrop
-        
-        Vimage = PILimage.open(r"./temp/current.jpg")
-        Vimage.thumbnail((500,500))
-        # blob = Vimage.make_blob(format="jpg")
-        # if Photoimage below is imported globally, it will not work, PhotoImage object needs to redefined inside scope, otherwise it doesnt track image changes, weird.
-        VmainImage = ImageTk.PhotoImage(Vimage)
-        # ===== endgloballyupdatevar
 
-
-        lastUsed_data.append({"effect": "highlight", "value1": l_cs1, "value2": l_cs2})
-        VappendJson()
-        # endappendjson
-
-
-        VlabelImage.config(image=VmainImage)
-        # ===== endupdateimagelabel
-
-    except Exception as e:
-        messagebox.showwarning(message=f"Error: {e}")
-        print(e)
 
 def VsaveJson():
     global lastUsed_data
