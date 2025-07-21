@@ -36,7 +36,7 @@ def folder_required(func):
     the decorated function is called.
     """
     def wrapper(*args, **kwargs):
-        if not Path("./input").is_dir() or not Path("./temp").is_dir() or not Path("./input/__tree.jpg").is_file():
+        if not Path("./input").is_dir() or not Path("./temp").is_dir() or not Path("./input/__first.jpg").is_file():
             errorMessage = "Make sure ./input, ./temp and ./input/_tree.jpg exist"
             messagebox.showinfo(message=f"App disabled becoz: {errorMessage}")
             window.destroy()
@@ -105,7 +105,7 @@ Vscale_spgray_val.set(0)
 def initMainImageLabel():    
     global mainLabelWindowX, mainLabelWindowY
     shutil.copyfile(    
-        r'./input/__tree.jpg',
+        r'./input/__first.jpg',
         r'./temp/current.jpg'
     )
     Vimage = PILimage.open(r"./temp/current.jpg")
